@@ -1,3 +1,5 @@
+import os
+os.environ["DEEPSPEED_NO_MPI"] = "1"
 """
 Continuous Pre-Training (CPT) script for Nemotron models
 Supports DeepSpeed, gradient accumulation, mixed precision, and distributed training
@@ -207,9 +209,10 @@ class CPTTrainer:
             dataloader_num_workers=training_config.get('dataloader_num_workers', 4),
             dataloader_pin_memory=True,
             gradient_checkpointing=training_config.get('gradient_checkpointing', True),
+            optim=training_config.get('optim', 'adamw_torch'),
 
             # DeepSpeed
-            deepspeed=training_config.get('deepspeed_config'),
+            deepspeed=training_config.get('deepspeed'),
 
             # W&B logging
             report_to=["wandb"] if training_config.get('use_wandb', False) else [],

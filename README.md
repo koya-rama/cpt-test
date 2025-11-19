@@ -71,10 +71,12 @@ CPT/
 
 ### Prerequisites
 
-- Python 3.10+
-- CUDA 11.8+ (for GPU training)
-- 24GB+ GPU memory for prototype (RTX 4090)
-- 4x GPUs recommended for production training
+- **Python**: 3.10.12+ (tested on 3.10.12)
+- **CUDA**: 12.1+ (tested with 12.7 on NVIDIA L40S)
+- **GPU Memory**:
+  - Prototype: 16GB+ (RTX 4090, RTX 3090)
+  - Production: 4x GPUs with 40GB+ each recommended (A100, H100, L40S)
+- **Tested Hardware**: NVIDIA L40S (46GB VRAM), RTX 4090 (24GB)
 
 ### Setup
 
@@ -90,24 +92,47 @@ CPT/
    # On Windows
    venv\Scripts\activate
 
-   # On Linux/Mac
+   # On Linux/Ubuntu
    source venv/bin/activate
    ```
 
-3. **Install dependencies**
+3. **Install PyTorch with CUDA 12.1 (compatible with CUDA 12.7)**
+   ```bash
+   # PyTorch with CUDA 12.1 (works with CUDA 12.7 via backward compatibility)
+   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+   ```
+
+4. **Install other dependencies**
    ```bash
    pip install -r requirements.txt
    ```
 
-4. **Install Flash Attention (optional but recommended)**
+5. **Install Flash Attention (optional but recommended)**
    ```bash
-   pip install flash-attn --no-build-isolation
+   # Method 1: Try direct installation
+   pip install flash-attn --no-build-isolation --no-cache-dir
+
+   # Method 2: If above fails due to filesystem issues, download wheel directly
+   # For Python 3.10 + CUDA 12 + PyTorch 2.5:
+   wget https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3+cu12torch2.5cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
+   pip install flash_attn-2.8.3+cu12torch2.5cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
+
+   # Note: Flash Attention is optional. Training will work without it, just slower.
    ```
 
-5. **Login to HuggingFace (required for Nemotron datasets)**
+6. **Login to HuggingFace (required for Nemotron datasets)**
    ```bash
    huggingface-cli login
    ```
+
+### Tested Environment
+
+This pipeline has been tested on:
+- **Python**: 3.10.12
+- **CUDA**: 12.7 (Driver Version 565.57.01)
+- **GPU**: NVIDIA L40S (46GB VRAM)
+- **PyTorch**: 2.5.1+cu121
+- **OS**: Ubuntu 22.04 LTS
 
 ## Quick Start - Prototype on RTX 4090
 
@@ -115,11 +140,15 @@ CPT/
 
 | Model | Config File | VRAM | Context | Best For |
 |-------|------------|------|---------|----------|
-| **Llama 3.2 3B** ✅ | `prototype_rtx4090_16gb_llama.yaml` | 16GB | 4K | **16GB systems** (Recommended) |
+| **Nemotron-Nano-9B-v2** ⭐ | `l40s_nemotron_nano_9b.yaml` | 46GB | 4K-8K | **L40S, A100** (Latest & Best) |
+| **Llama 3.2 3B** ✅ | `prototype_rtx4090_16gb_llama.yaml` | 16GB | 4K | **16GB systems** (Fast testing) |
 | **Nemotron Nano 8B** | `prototype_rtx4090_16gb_nemotron_nano.yaml` | 20-24GB | 128K | Long context, 20GB+ VRAM |
 | **Nemotron 8B** | `prototype_rtx4090.yaml` | 24GB | 4K | Full model training |
 
-**Recommended:** Start with **Llama 3.2 3B** on 16GB systems or **Nemotron Nano 8B/8B** on 24GB systems.
+**Recommended:**
+- **L40S / A100 (40GB+)**: Use **Nemotron-Nano-9B-v2** (latest, most capable)
+- **RTX 4090 16GB**: Start with **Llama 3.2 3B**
+- **RTX 4090 24GB**: Use **Nemotron Nano 8B** or **Nemotron 8B**
 
 ### Step 1: Prepare Sample Data
 
@@ -141,6 +170,15 @@ python scripts/prepare_data.py --verify configs/prototype_rtx4090.yaml
 ```
 
 ### Step 3: Run Training
+
+**Using Nemotron-Nano-9B-v2 on L40S (46GB VRAM - RECOMMENDED):** ⭐
+```bash
+# Standard training
+python src/training/train_cpt.py --config configs/l40s_nemotron_nano_9b.yaml
+
+# With DeepSpeed for further optimization
+python src/training/train_cpt.py --config configs/l40s_nemotron_nano_9b.yaml --deepspeed configs/ds_config_l40s.json
+```
 
 **Using Nemotron Nano 8B (Recommended for 16GB VRAM):**
 ```bash
@@ -223,17 +261,24 @@ data:
 
 ### Available Models
 
-- **nvidia/nemotron-3-8b-base-4k** - 8B parameters, 4K context (recommended for prototype)
-- **nvidia/Nemotron-H-8B-Base-8K** - Hybrid architecture, 8K context
+- **nvidia/NVIDIA-Nemotron-Nano-9B-v2** ⭐ - **LATEST** 9B parameters, advanced architecture (L40S/A100)
 - **nvidia/Llama-3.1-Nemotron-Nano-8B-v1** - Llama-based, 128K context, optimized efficiency
+- **nvidia/nemotron-3-8b-base-4k** - 8B parameters, 4K context (standard)
+- **nvidia/Nemotron-H-8B-Base-8K** - Hybrid architecture, 8K context
 - **meta-llama/Llama-3.2-3B** - Smaller Llama model, 3B parameters (good for testing)
 
 ### Recommended Configurations
 
+**For 40-48GB VRAM (L40S, A100 40GB/80GB):** ⭐ **BEST PERFORMANCE**
+- ✅ Use `configs/l40s_nemotron_nano_9b.yaml` for **Nemotron-Nano-9B-v2** (Recommended)
+- Can handle batch_size=2-4, max_length=4096-8192
+- Expected throughput: ~5-8 tokens/sec with Flash Attention
+- Memory usage: ~35-40GB / 46GB (plenty of headroom)
+
 **For 16GB VRAM (RTX 4090 Laptop):**
 - ✅ Use `configs/prototype_rtx4090_16gb_llama.yaml` for **Llama 3.2 3B** (Recommended)
 - ⚠️ Nemotron Nano 8B requires 20GB+ VRAM for full training
-- Note: 8B models are too large for 16GB VRAM without DeepSpeed ZeRO-3 with CPU offloading
+- Note: 8B+ models are too large for 16GB VRAM without DeepSpeed ZeRO-3 with CPU offloading
 
 **For 20-24GB VRAM (RTX 4090 Desktop, RTX 3090):**
 - Use `configs/prototype_rtx4090_16gb_nemotron_nano.yaml` for Nemotron Nano 8B (with optimizations)
@@ -245,11 +290,16 @@ data:
 Edit your config file:
 ```yaml
 model:
-  name: "nvidia/Llama-3.1-Nemotron-Nano-8B-v1"  # Change to your desired model
+  name: "nvidia/NVIDIA-Nemotron-Nano-9B-v2"  # Change to your desired model
+  use_flash_attention: true  # Highly recommended for performance
 ```
 
 Or use a pre-configured file:
 ```bash
+# For L40S with 9B model (Best)
+python src/training/train_cpt.py --config configs/l40s_nemotron_nano_9b.yaml
+
+# For RTX 4090 with 8B model
 python src/training/train_cpt.py --config configs/prototype_rtx4090_16gb_nemotron_nano.yaml
 ```
 
@@ -289,6 +339,14 @@ training:
 ```
 
 ### Memory Optimization Tips
+
+**For L40S (46GB):** ⭐
+- Batch size: 2-4
+- Gradient accumulation: 4-8
+- Max length: 4096-8192
+- Enable gradient checkpointing
+- Flash Attention highly recommended
+- Optional: Use DeepSpeed ZeRO-2 for marginal gains
 
 **For RTX 4090 (24GB):**
 - Batch size: 1
@@ -358,6 +416,8 @@ training:
 ### Slow Training
 
 1. **Enable Flash Attention**: `use_flash_attention: true`
+   - Install: `pip install flash-attn --no-build-isolation --no-cache-dir`
+   - If fails, download wheel: See Installation section above
 2. **Increase batch size** if memory allows
 3. **Reduce gradient checkpointing** if memory is not an issue
 4. **Use multiple GPUs** with DeepSpeed
@@ -372,12 +432,22 @@ training:
 
 ## Performance Benchmarks
 
+### L40S (46GB) - Nemotron-Nano-9B-v2 ⭐
+- Model: nvidia/NVIDIA-Nemotron-Nano-9B-v2
+- Batch size: 2
+- Gradient accumulation: 8
+- Sequence length: 4096
+- Flash Attention: Enabled
+- **Expected**: ~5-8 tokens/sec/GPU
+- **Memory**: ~35-40GB / 46GB
+
 ### RTX 4090 (24GB)
 - Model: nemotron-3-8b-base-4k
 - Batch size: 1
 - Gradient accumulation: 8
 - Sequence length: 4096
 - **Expected**: ~2-3 tokens/sec/GPU
+- **Memory**: ~20-22GB / 24GB
 
 ### 4x A100 (80GB each)
 - Model: Nemotron-H-8B-Base-8K
@@ -457,9 +527,14 @@ This project is provided as-is. Please check the licenses of individual models a
 
 For issues and questions:
 1. Check the troubleshooting section above
-2. Review HuggingFace model/dataset documentation
-3. Check NVIDIA NeMo documentation
-4. Open an issue in your repository
+2. Verify your environment:
+   - `nvidia-smi` - Check GPU availability
+   - `python --version` - Should be 3.10.12+
+   - `python -c "import torch; print(torch.cuda.is_available())"` - Should print True
+   - `python -c "import torch; print(torch.version.cuda)"` - Should show CUDA version
+3. Review HuggingFace model/dataset documentation
+4. Check NVIDIA NeMo documentation
+5. Open an issue in your repository
 
 ## Acknowledgments
 

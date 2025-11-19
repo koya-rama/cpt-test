@@ -4,6 +4,9 @@ __pycache__/
 *$py.class
 *.so
 .Python
+env/
+env_cpt/
+venv/
 build/
 develop-eggs/
 dist/
@@ -20,57 +23,40 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual environments
-venv/
-env/
-ENV/
-.venv
+# Jupyter Notebook
+.ipynb_checkpoints
 
-# IDEs
-.vscode/
+# PyCharm
 .idea/
-*.swp
-*.swo
-*~
 
-# Training outputs
+# VS Code
+.vscode/
+
+# Model checkpoints and data
 checkpoints/
-logs/
-wandb/
-runs/
-
-# Data
-data/cache/
-data/custom_corpus/*.txt
-data/custom_corpus/*.jsonl
-data/custom_corpus/*.parquet
-data/custom_corpus/*.csv
-
-# Keep directory structure
-!data/custom_corpus/.gitkeep
-!checkpoints/.gitkeep
-!logs/.gitkeep
-
-# Model files
-*.bin
-*.safetensors
 *.pt
 *.pth
+*.bin
+*.safetensors
+data/custom_corpus/
+*.tar.gz
 
-# OS
-.DS_Store
-Thumbs.db
+# Weights & Biases
+wandb/
 
-# Jupyter
-.ipynb_checkpoints/
-*.ipynb
+# Large files
+*.h5
+*.pkl
+*.pickle
 
 # Environment
 .env
 .env.local
 
-# Secrets
-hf_token
-
 # Logs
 *.log
+logs/
+
+# Cache
+.cache/
+*.cache

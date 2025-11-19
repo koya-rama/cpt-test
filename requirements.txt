@@ -1,31 +1,36 @@
-# Core dependencies
-torch>=2.1.0
-transformers>=4.46.0
-datasets>=2.16.0
-accelerate>=0.25.0
-tokenizers>=0.15.0
+# Core dependencies (Python 3.10.12 + CUDA 12.7 compatible)
+# NOTE: Install PyTorch with CUDA 12.1 support first using:
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+# PyTorch doesn't have cu127 wheels, but cu121 works perfectly with CUDA 12.7 (backward compatible)
+
+# After PyTorch is installed, install these:
+# Transformers and related
+transformers>=4.44.0,<4.50.0
+datasets>=2.20.0,<3.0.0
+accelerate>=0.34.0,<1.0.0
+tokenizers>=0.19.0,<0.21.0
 
 # Training optimization
-deepspeed>=0.12.0
-bitsandbytes>=0.41.0
-peft>=0.7.0
-flash-attn>=2.3.0
+deepspeed>=0.14.0,<0.16.0
+bitsandbytes>=0.43.0,<0.45.0
+peft>=0.12.0,<0.14.0
+# flash-attn>=2.6.0,<2.8.0; platform_system != "Windows"  # Install separately after torch: pip install flash-attn --no-build-isolation
 
 # Data processing
-sentencepiece>=0.1.99
-pyarrow>=14.0.0
-pandas>=2.0.0
-numpy>=1.24.0
+sentencepiece>=0.2.0,<0.3.0
+pyarrow>=14.0.0,<18.0.0
+pandas>=2.0.0,<2.3.0
+numpy>=1.24.0,<2.0.0
 
 # Monitoring and logging
-wandb>=0.16.0
-tensorboard>=2.15.0
-tqdm>=4.66.0
+wandb>=0.17.0,<0.19.0
+tensorboard>=2.16.0,<3.0.0
+tqdm>=4.66.0,<5.0.0
 
 # Utilities
-pyyaml>=6.0
-scipy>=1.11.0
-scikit-learn>=1.3.0
+pyyaml>=6.0.1,<7.0
+scipy>=1.11.0,<1.15.0
+scikit-learn>=1.3.0,<1.7.0
 
 # NVIDIA specific (optional but recommended for Nemotron)
 # nemo-toolkit[all]>=1.22.0  # Uncomment if using NeMo Curator for data processing

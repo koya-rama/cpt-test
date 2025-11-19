@@ -1,0 +1,36 @@
+model:
+  name: "nvidia/NVIDIA-Nemotron-Nano-9B-v2"
+  use_flash_attention: true
+
+data:
+  custom_corpus_paths:
+    - "./data/custom_corpus"
+  text_column: "text"
+  max_length: 2048  # Reduced from 4096
+  streaming: true
+  num_proc: 8
+
+training:
+  output_dir: "./checkpoints/l40s_nemotron_9b"
+  num_epochs: 1
+  max_steps: 10000
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 16
+  per_device_eval_batch_size: 1
+  learning_rate: 2.0e-05
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  warmup_steps: 500
+  lr_scheduler_type: "cosine"
+  bf16: true
+  fp16: false
+  gradient_checkpointing: true
+  logging_steps: 10
+  save_steps: 500
+  save_total_limit: 3
+  evaluation_strategy: "no"
+  dataloader_num_workers: 4
+  deepspeed: "./configs/deepspeed_zero2_simple.json"  # Add this
+  use_wandb: true
+  wandb_project: "nemotron-cpt-l40s"
+  run_name: "nemotron-nano-9b-v2-l40s-deepspeed"
