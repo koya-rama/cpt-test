@@ -1,0 +1,70 @@
+# Configuration for Prototype Training on RTX 4090 Desktop (24GB VRAM)
+# For RTX 4090 Laptop (16GB), use prototype_rtx4090_16gb.yaml instead
+# Optimized for single GPU with limited data
+
+model:
+  name: "nvidia/nemotron-3-8b-base-4k"  # Smaller context for prototype
+  use_flash_attention: true  # Requires flash-attn package
+
+data:
+  # For prototype, use a small subset of data
+  # Uncomment and modify based on your available data
+  hf_datasets:
+    # - "nvidia/Nemotron-CC"  # Uncomment for full dataset
+    # For prototype, you might want to use a smaller dataset or limit samples
+
+  custom_corpus_paths:
+    - "./data/custom_corpus"  # Add your custom corpus here
+
+  text_column: "text"
+  max_length: 4096  # Match model's context length
+  streaming: true  # Use streaming to avoid loading all data into memory
+  num_proc: 4
+
+training:
+  output_dir: "./checkpoints/prototype"
+
+  # Training duration
+  num_epochs: 1
+  max_steps: 10000  # Limit steps for prototype
+
+  # Batch size optimized for RTX 4090 (24GB)
+  per_device_train_batch_size: 1  # Small batch size
+  gradient_accumulation_steps: 8  # Effective batch size = 1 * 8 = 8
+  per_device_eval_batch_size: 1
+
+  # Learning rate and optimization
+  learning_rate: 2.0e-5
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  warmup_steps: 100
+  lr_scheduler_type: "cosine"
+
+  # Mixed precision - use bf16 for better stability on modern GPUs
+  bf16: true
+  fp16: false
+
+  # Memory optimizations
+  gradient_checkpointing: true  # Save memory at cost of speed
+
+  # Logging and checkpointing
+  logging_steps: 10
+  save_steps: 500
+  save_total_limit: 2  # Keep only 2 checkpoints to save disk space
+
+  # Evaluation
+  evaluation_strategy: "no"  # Disable for prototype
+
+  # Data loading
+  dataloader_num_workers: 2  # Reduce for laptop
+
+  # W&B logging (optional)
+  use_wandb: false  # Set to true if you want to use Weights & Biases
+  wandb_project: "nemotron-cpt-prototype"
+  run_name: "rtx4090-prototype"
+
+  # DeepSpeed config (optional, for memory optimization)
+  # deepspeed_config: "./configs/ds_config_prototype.json"
+
+  # Resume from checkpoint
+  # resume_from_checkpoint: "./checkpoints/prototype/checkpoint-500"

@@ -1,0 +1,59 @@
+# Configuration for RTX 4090 Laptop (16GB) - Using Llama-3.1-Nemotron-Nano-8B-v1
+# NVIDIA's Nemotron Nano model with 128K context support
+# Optimized for 16GB VRAM with efficient memory usage
+
+model:
+  name: "nvidia/Llama-3.1-Nemotron-Nano-8B-v1"  # Nemotron Nano with extended context
+  use_flash_attention: false
+
+data:
+  custom_corpus_paths:
+    - "./data/custom_corpus"
+
+  text_column: "text"
+  max_length: 512  # Reduced for 16GB VRAM (was 2048)
+  streaming: false  # Use false for small datasets to ensure proper column removal
+  num_proc: 2
+
+training:
+  output_dir: "./checkpoints/nemotron_nano"
+
+  # Training duration
+  num_epochs: 1
+  max_steps: 10  # Ultra-quick test (was 50)
+
+  # Batch size for 16GB - Ultra-optimized
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 4  # Reduced for memory (was 8)
+  per_device_eval_batch_size: 1
+
+  # Learning rate and optimization
+  learning_rate: 2.0e-5
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  warmup_steps: 100
+  lr_scheduler_type: "cosine"
+
+  # Mixed precision
+  bf16: true
+  fp16: false
+
+  # Memory optimizations
+  gradient_checkpointing: true
+
+  # Logging and checkpointing
+  logging_steps: 5  # Log more frequently for testing
+  save_steps: 50  # Don't save intermediate checkpoints for quick test
+  save_total_limit: 2
+
+  # Evaluation
+  evaluation_strategy: "no"
+
+  # Data loading
+  dataloader_num_workers: 2
+
+  # W&B logging
+  use_wandb: false
+  wandb_project: "nemotron-cpt-nano"
+  run_name: "nemotron-nano-8b-16gb"
+

@@ -1,0 +1,61 @@
+# Configuration for RTX 4090 Laptop (16GB VRAM) - WITHOUT DeepSpeed
+# Use this if DeepSpeed installation fails on Windows
+# Still highly optimized for 16GB VRAM
+
+model:
+  name: "nvidia/nemotron-3-8b-base-4k"
+  use_flash_attention: false  # Set to true if Flash Attention installed successfully
+
+data:
+  custom_corpus_paths:
+    - "./data/custom_corpus"
+
+  text_column: "text"
+  max_length: 2048  # Optimized for 16GB
+  streaming: false  # Use false for small datasets to ensure proper column removal
+  num_proc: 2
+
+training:
+  output_dir: "./checkpoints/prototype"
+
+  # Training duration
+  num_epochs: 1
+  max_steps: 5000
+
+  # Batch size for 16GB WITHOUT DeepSpeed
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 16
+  per_device_eval_batch_size: 1
+
+  # Learning rate and optimization
+  learning_rate: 2.0e-5
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  warmup_steps: 100
+  lr_scheduler_type: "cosine"
+
+  # Mixed precision
+  bf16: true
+  fp16: false
+
+  # Memory optimizations - Critical without DeepSpeed
+  gradient_checkpointing: true
+
+  # Logging and checkpointing
+  logging_steps: 10
+  save_steps: 500
+  save_total_limit: 2
+
+  # Evaluation
+  evaluation_strategy: "no"
+
+  # Data loading
+  dataloader_num_workers: 2
+
+  # W&B logging
+  use_wandb: false
+  wandb_project: "nemotron-cpt-prototype"
+  run_name: "rtx4090-laptop-16gb-no-ds"
+
+  # DeepSpeed DISABLED for compatibility
+  # deepspeed_config: null

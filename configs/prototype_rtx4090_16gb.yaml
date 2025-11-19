@@ -1,0 +1,68 @@
+# Configuration for Prototype Training on RTX 4090 Laptop (16GB VRAM)
+# Optimized for 16GB VRAM with aggressive memory optimizations
+
+model:
+  name: "nvidia/nemotron-3-8b-base-4k"  # 8B model
+  use_flash_attention: true  # Highly recommended for memory efficiency
+
+data:
+  # For prototype, use a small subset of data
+  hf_datasets:
+    # - "nvidia/Nemotron-CC"  # Uncomment for full dataset
+    # For prototype with 16GB, start with small custom corpus
+
+  custom_corpus_paths:
+    - "./data/custom_corpus"  # Add your custom corpus here
+
+  text_column: "text"
+  max_length: 2048  # Reduced from 4096 for 16GB VRAM
+  streaming: true  # Essential for limited VRAM
+  num_proc: 2  # Reduced for laptop
+
+training:
+  output_dir: "./checkpoints/prototype"
+
+  # Training duration
+  num_epochs: 1
+  max_steps: 5000  # Reduced for prototype
+
+  # Batch size optimized for RTX 4090 Laptop (16GB VRAM)
+  per_device_train_batch_size: 1  # Must stay at 1 for 16GB
+  gradient_accumulation_steps: 16  # Increased to compensate (effective batch = 16)
+  per_device_eval_batch_size: 1
+
+  # Learning rate and optimization
+  learning_rate: 2.0e-5
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  warmup_steps: 100
+  lr_scheduler_type: "cosine"
+
+  # Mixed precision - use bf16 for better stability
+  bf16: true
+  fp16: false
+
+  # Memory optimizations - CRITICAL for 16GB
+  gradient_checkpointing: true  # Essential - saves ~50% memory
+
+  # Logging and checkpointing
+  logging_steps: 10
+  save_steps: 500
+  save_total_limit: 2  # Keep only 2 checkpoints to save disk space
+
+  # Evaluation
+  evaluation_strategy: "no"  # Disable for prototype
+
+  # Data loading
+  dataloader_num_workers: 2  # Laptop-friendly
+
+  # W&B logging (optional)
+  use_wandb: false  # Set to true if you want to use Weights & Biases
+  wandb_project: "nemotron-cpt-prototype"
+  run_name: "rtx4090-laptop-16gb"
+
+  # DeepSpeed config - ENABLED for 16GB optimization
+  deepspeed_config: "./configs/ds_config_prototype.json"
+
+  # Resume from checkpoint
+  # resume_from_checkpoint: "./checkpoints/prototype/checkpoint-500"

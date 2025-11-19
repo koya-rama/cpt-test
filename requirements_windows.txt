@@ -1,0 +1,36 @@
+# Windows-optimized requirements (install in order)
+# IMPORTANT: Install PyTorch with CUDA support first using:
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+# Step 1: Core dependencies
+# torch>=2.1.0  # DO NOT install via this file - use command above for CUDA version
+transformers>=4.46.0
+datasets>=2.16.0
+accelerate>=0.25.0
+tokenizers>=0.15.0
+
+# Step 2: Training optimization (DeepSpeed optional on Windows)
+# deepspeed>=0.12.0  # Commented - difficult on Windows, use alternative below
+bitsandbytes>=0.41.0
+peft>=0.7.0
+# flash-attn>=2.3.0  # Install separately: pip install flash-attn --no-build-isolation
+
+# Step 3: Data processing
+sentencepiece>=0.1.99
+pyarrow>=14.0.0
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Step 4: Monitoring and logging
+wandb>=0.16.0
+tensorboard>=2.15.0
+tqdm>=4.66.0
+
+# Step 5: Utilities
+pyyaml>=6.0
+scipy>=1.11.0
+scikit-learn>=1.3.0
+
+# Optional: GPU utilities
+gputil>=1.4.0
+psutil>=5.9.0

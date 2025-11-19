@@ -1,0 +1,57 @@
+# Quick Test Configuration - Phi-3 Mini on RTX 4090 Laptop (16GB)
+# Minimal steps to prove CPT pipeline works
+
+model:
+  name: "microsoft/Phi-3-mini-4k-instruct"  # 3.8B params, open access
+  use_flash_attention: false
+
+data:
+  custom_corpus_paths:
+    - "./data/custom_corpus"
+
+  text_column: "text"
+  max_length: 512  # Short sequences for fast testing
+  streaming: false
+  num_proc: 2
+
+training:
+  output_dir: "./checkpoints/quick_test"
+
+  # Minimal training - just prove it works
+  num_epochs: 1
+  max_steps: 50  # Only 50 steps to verify pipeline
+
+  # Batch size for 16GB
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 4  # Effective batch = 4
+  per_device_eval_batch_size: 1
+
+  # Learning rate
+  learning_rate: 2.0e-5
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  warmup_steps: 10  # Minimal warmup
+  lr_scheduler_type: "cosine"
+
+  # Mixed precision
+  bf16: true
+  fp16: false
+
+  # Memory optimizations
+  gradient_checkpointing: true
+
+  # Logging - frequent for testing
+  logging_steps: 5  # Log every 5 steps
+  save_steps: 25  # Save checkpoint at step 25
+  save_total_limit: 1  # Keep only 1 checkpoint
+
+  # No evaluation
+  eval_strategy: "no"
+
+  # Data loading
+  dataloader_num_workers: 2
+
+  # No W&B for quick test
+  use_wandb: false
+  wandb_project: "cpt-quick-test"
+  run_name: "phi3-quick-test"

@@ -1,0 +1,71 @@
+# Configuration for Production Training on Multi-GPU Setup
+# Optimized for full-scale continuous pre-training
+
+model:
+  name: "nvidia/Nemotron-H-8B-Base-8K"  # Full model with 8K context
+  use_flash_attention: true
+
+data:
+  # Full Nemotron pre-training datasets
+  hf_datasets:
+    - "nvidia/Nemotron-CC"  # 6.3T tokens from Common Crawl
+    # - "nvidia/Nemotron-CC-v2"  # Extended version (uncomment if available)
+    # - "nvidia/Nemotron-CC-Math-v1"  # Math-focused dataset
+    # - "nvidia/Nemotron-Pretraining-Code-v1"  # Code dataset
+
+  custom_corpus_paths:
+    - "./data/custom_corpus"  # Your domain-specific data
+
+  text_column: "text"
+  max_length: 8192  # Full context length
+  streaming: true
+  num_proc: 8
+
+training:
+  output_dir: "./checkpoints/production"
+
+  # Training duration for full CPT
+  num_epochs: 1
+  max_steps: -1  # Train on full dataset
+
+  # Batch size for multi-GPU (adjust based on available GPUs)
+  per_device_train_batch_size: 4  # Per GPU
+  gradient_accumulation_steps: 4  # Effective batch size = 4 * 4 * num_gpus
+  per_device_eval_batch_size: 4
+
+  # Learning rate and optimization
+  learning_rate: 1.0e-4  # Higher LR for larger batch size
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  warmup_steps: 2000
+  lr_scheduler_type: "cosine"
+
+  # Mixed precision
+  bf16: true
+  fp16: false
+
+  # Memory optimizations
+  gradient_checkpointing: true
+
+  # Logging and checkpointing
+  logging_steps: 50
+  save_steps: 2000
+  save_total_limit: 5
+
+  # Evaluation
+  evaluation_strategy: "steps"
+  eval_steps: 2000
+
+  # Data loading
+  dataloader_num_workers: 8
+
+  # W&B logging
+  use_wandb: true
+  wandb_project: "nemotron-cpt-production"
+  run_name: "nemotron-8b-full-cpt"
+
+  # DeepSpeed config for multi-GPU optimization
+  deepspeed_config: "./configs/ds_config_production.json"
+
+  # Resume from checkpoint if needed
+  # resume_from_checkpoint: "./checkpoints/production/checkpoint-10000"
